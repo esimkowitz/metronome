@@ -1,0 +1,25 @@
+<body>
+	<div class="container">
+		<h1>Metronome</h1>
+	    <div class="controls">
+	      	<a href="#" class="play" id="play_button">{{play}}</a>
+
+		    <div class="tempoBox">
+		      	Tempo: {{tempo}} BPM 
+		      	<input id="tempo" type="range" min="30.0" max="160.0" step="1" value="60">
+		    </div>
+
+		    <div class="resolutionBox">
+		      	Resolution:
+		      	<select id="beat_resolution">
+		        	<option value="1">Whole notes</option>
+		        	<option value="4" selected="selected">Quarter notes</option>
+		        	<option value="8">8th notes</option>
+		        	<option value="16">16th notes</option>
+		      	</select>
+		    </div>
+	    </div>
+	    <div>{{> animation}}</div>
+	    <div>{{> syncStatus}}</div>
+	</div>
+</body>
