@@ -2,15 +2,9 @@ import { Template } from 'meteor/templating';
 import { createjs } from 'meteor/nrafter:createjs';
 import './animation.html';
 
-Template.animation.onCreated(function() {
-
-});
-
-var stage, tickEvent, circle, leftBound, rightBound, isRight = true;
+var stage, tickEvent, circle, isRight = true;
 var scaleWidth, scaleHeight, canvasWidth, canvasHeight;
-var leftWidth, leftHeight, leftRound, rightStartX, rightWidt, rightHeight, rightRound;
 function initAnimation() {
-	var beatNumber = 1;
 	stage = new createjs.Stage("animation");
 	
 	canvasWidth = document.getElementById("animation").width;
@@ -18,25 +12,32 @@ function initAnimation() {
 	scaleWidth = canvasWidth / 1200;
 	scaleHeight = canvasHeight / 600;
 	circle = new createjs.Shape();
-	// const circleScale = Math.sqrt(Math.pow(scaleWidth, 2) + Math.pow(scaleHeight, 2));
 	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 100*scaleWidth);
 	circle.x = canvasWidth / 2;
 	circle.y = 300*scaleHeight;
 	stage.addChild(circle);
-	leftWidth = 100*scaleWidth;
-	leftHeight = 600*scaleHeight;
-	leftRound = 20*(scaleWidth + scaleHeight)/2.0;
-	rightStartX = canvasWidth - 100*scaleWidth;
-	rightWidth = 100*scaleWidth;
-	rightHeight = 600*scaleHeight;
-	rightRound = 20*(scaleWidth + scaleHeight)/2.0;
-	leftBound = new createjs.Shape();
-	leftBound.graphics.beginFill("#FF4100").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
-	stage.addChild(leftBound);
+	const leftWidth = 100*scaleWidth;
+	const leftHeight = 600*scaleHeight;
+	const leftRound = 20*(scaleWidth + scaleHeight)/2.0;
+	const rightStartX = canvasWidth - 100*scaleWidth;
+	const rightWidth = 100*scaleWidth;
+	const rightHeight = 600*scaleHeight;
+	const rightRound = 20*(scaleWidth + scaleHeight)/2.0;
+	var leftBoundRed = new createjs.Shape();
+	leftBoundRed.graphics.beginFill("#FF4100").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
+	// leftBoundGrey = new createjs.Shape();
+	// leftBoundGrey.graphics.beginFill("#CDCDCD").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
+	// leftBoundGrey.visible = false;
+	stage.addChild(leftBoundRed);
+	// stage.addChild(leftBoundGrey);
 
-	rightBound = new createjs.Shape();
-	rightBound.graphics.beginFill("#FF4100").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
-	stage.addChild(rightBound);
+	var rightBoundRed = new createjs.Shape();
+	rightBoundRed.graphics.beginFill("#FF4100").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
+	// rightBoundGrey = new createjs.Shape();
+	// rightBoundGrey.graphics.beginFill("#CDCDCD").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
+	// rightBoundGrey.visible = false;
+	stage.addChild(rightBoundRed);
+	// stage.addChild(rightBoundGrey);
 
 	createjs.Ticker.framerate = 60;
 	if (tickEvent) {
@@ -57,14 +58,14 @@ strike = function(delay, right) {
 		isRight = false;
 		createjs.Tween.get(circle, {override: true})
 		.to({ x: canvasWidth - 200*scaleWidth, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineIn())
-		.call(flash,[leftBound, rightBound])
+		// .call(flash,[leftBoundRed, rightBoundRed, leftBoundGrey, rightBoundGrey])
 		.call(logAnim)
 		.to({ x: canvasWidth/2, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineOut());
 	} else {
 		isRight = true;
 		createjs.Tween.get(circle, {override: true})
 		.to({ x: 200*scaleWidth, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineIn())
-		.call(unflash,[leftBound, rightBound])
+		// .call(unflash,[leftBoundRed, rightBoundRed, leftBoundGrey, rightBoundGrey])
 		.call(logAnim)
 		.to({ x: canvasWidth/2, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineOut());
 	}
@@ -84,15 +85,15 @@ startAnimation = function() {
 	}
 };
 
-function clearAnimation(callback) {
-	stage.clear();
-	stage.removeAllChildren();
-	stage.removeAllEventListeners();
-    createjs.Ticker.off('tick', tickEvent);
-    if (typeof callback != "undefined") {
-		callback();
-	}
-}
+// function clearAnimation(callback) {
+// 	stage.clear();
+// 	stage.removeAllChildren();
+// 	stage.removeAllEventListeners();
+//     createjs.Ticker.off('tick', tickEvent);
+//     if (typeof callback != "undefined") {
+// 		callback();
+// 	}
+// }
 
 pauseAnimation = function(callback) {
 	document.getElementById("animation").style.display = "none";
@@ -117,15 +118,19 @@ function logAnim() {
 	console.log("Animation at " + (ts.now()%60000)/1000 + "s");
 }
 
-function flash() {
-	arguments[0].graphics.clear().beginFill("#CDCDCD").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
-	arguments[1].graphics.clear().beginFill("#CDCDCD").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
-}
+// function flash() {
+// 	arguments[0].visible = false;
+// 	arguments[1].visible = false;
+// 	arguments[2].visible = true;
+// 	arguments[3].visible = true;
+// }
 
-function unflash() {
-	arguments[0].graphics.clear().beginFill("#FF4100").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
-	arguments[1].graphics.clear().beginFill("#FF4100").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
-}
+// function unflash() {
+// 	arguments[0].visible = true;
+// 	arguments[1].visible = true;
+// 	arguments[2].visible = false;
+// 	arguments[3].visible = false;
+// }
 
 function tick(event) {
 	stage.update(event);
