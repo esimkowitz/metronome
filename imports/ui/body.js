@@ -21,6 +21,9 @@ Template.body.helpers({
       return "Play";
     }
   },
+  isCordova() {
+    return Meteor.isCordova;
+  }
 });
 
 Template.body.events({
