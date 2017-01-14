@@ -9,7 +9,7 @@ Session.set('offset', 0);
 ts = timesync.create({
 	// server: 'http://54.210.200.80:3000/timesync',
   server: '/timesync',
-  interval: 20000
+  interval: 10*60*1000
 });
 
 ts.on('sync', function (state) {
@@ -91,9 +91,10 @@ Meteor.startup(function() {
     });
   }
 });
-var delay;
+var delay, audioContext, AudioContext = window.AudioContext || window.webkitAudioContext;
+const noteLength = 0.05;      // length of "beep" (in seconds)
 function newMetronome(bpm) {
-	// audioContext = new AudioContext();
+	audioContext = new AudioContext();
 	console.log("New metronome at " + bpm + "bpm and a resolution of " + resolution);
 	delay = getDelayInMs(bpm);
 	console.log("Delay is " + delay);
@@ -153,6 +154,7 @@ function beatCallback() {
 	}
 
 	var now = ts.now();
+  //FIXME: see whether this one or the next one works better on mobile
 	if (!noPlay) {
     var freq, beatType;
   	// create a new oscillator to make the noise
@@ -189,6 +191,27 @@ function beatCallback() {
     // }
   }
 
+//   if (!noPlay) {
+//     var currTime = (now%60000)/1000;
+//     // create a new oscillator to make the noise
+//     var osc = audioContext.createOscillator();
+//     var beatType;
+//     if (nextTime[1] % 16 === 0) {   // beat 0 == high pitch
+//       osc.frequency.value = 880.0;
+//       beatType = "beat 0";
+//     } else if (nextTime[1] % 4 === 0 ) {   // quarter beats = medium pitch
+//       osc.frequency.value = 440.0;
+//       beatType = "quarter beat";
+//     } else {                       // other 16th beats = low pitch
+//       osc.frequency.value = 220.0;
+//       beatType = "16th beat";
+//     }
+//     console.log(beatType + " at " + currTime + "s");
+//     osc.connect( audioContext.destination );
+//     osc.start();
+//     osc.stop(audioContext.currentTime + noteLength);
+//   }
+
 	var diff = delay - (beatBuffer[0][0] - now);
 
 	// adds the next 10 beats to the beatBuffer if it runs too low
@@ -198,6 +221,7 @@ function beatCallback() {
 	}
   newTimeout(diff);
 }
+
 // FIXME: rewrite comment
 // parts of this function are adapted from https://github.com/cwilso/metronome/
 // Because the interval object uses the system clock and we want it to use the synchronized clock, this
