@@ -23,20 +23,12 @@ function initAnimation() {
 	const rightRound = 20*(scaleWidth + scaleHeight)/2.0;
 	var leftBoundRed = new createjs.Shape();
 	leftBoundRed.graphics.beginFill("#FF4100").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
-	// leftBoundGrey = new createjs.Shape();
-	// leftBoundGrey.graphics.beginFill("#CDCDCD").drawRoundRect(0,0,leftWidth,leftHeight,leftRound).endFill();
-	// leftBoundGrey.visible = false;
+
 	stage.addChild(leftBoundRed);
-	// stage.addChild(leftBoundGrey);
 
 	var rightBoundRed = new createjs.Shape();
 	rightBoundRed.graphics.beginFill("#FF4100").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
-	// rightBoundGrey = new createjs.Shape();
-	// rightBoundGrey.graphics.beginFill("#CDCDCD").drawRoundRect(rightStartX,0,rightWidth,rightHeight,rightRound).endFill();
-	// rightBoundGrey.visible = false;
 	stage.addChild(rightBoundRed);
-	// stage.addChild(rightBoundGrey);
-
 	createjs.Ticker.framerate = 60;
 	if (tickEvent) {
 		createjs.Ticker.off('tick', tickEvent);
@@ -56,14 +48,12 @@ strike = function(delay, right) {
 		isRight = false;
 		createjs.Tween.get(circle, {override: true})
 		.to({ x: canvasWidth - 200*scaleWidth, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineIn())
-		// .call(flash,[leftBoundRed, rightBoundRed, leftBoundGrey, rightBoundGrey])
 		.call(logAnim)
 		.to({ x: canvasWidth/2, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineOut());
 	} else {
 		isRight = true;
 		createjs.Tween.get(circle, {override: true})
 		.to({ x: 200*scaleWidth, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineIn())
-		// .call(unflash,[leftBoundRed, rightBoundRed, leftBoundGrey, rightBoundGrey])
 		.call(logAnim)
 		.to({ x: canvasWidth/2, y:300*scaleHeight }, 0.5*delay, createjs.Ease.sineOut());
 	}
@@ -115,20 +105,6 @@ function resumeAnimation(callback) {
 function logAnim() {
 	console.log("Animation at " + (ts.now()%60000)/1000 + "s");
 }
-
-// function flash() {
-// 	arguments[0].visible = false;
-// 	arguments[1].visible = false;
-// 	arguments[2].visible = true;
-// 	arguments[3].visible = true;
-// }
-
-// function unflash() {
-// 	arguments[0].visible = true;
-// 	arguments[1].visible = true;
-// 	arguments[2].visible = false;
-// 	arguments[3].visible = false;
-// }
 
 function tick(event) {
 	stage.update(event);

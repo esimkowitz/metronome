@@ -1,8 +1,8 @@
-import TinyMusic from 'tinymusic';
+import Tone from 'tone';
 
 function Metronome(tempo, resolution) {
 	var _this = this;
-	this.tempo = Number(typeof tempo !== 'undefined' ? tempo : 60.0) / 4.0;
+	this.tempo = Number(typeof tempo !== 'undefined' ? tempo : 60.0);
 	console.log("this.tempo = " + this.tempo);
 	this.resolution = Number(typeof resolution !== 'undefined' ? resolution : 4);
 	console.log("this.resolution = " + this.resolution);
@@ -28,7 +28,6 @@ function Metronome(tempo, resolution) {
 		//Find the Date of the first beat of a measure closest to the current date + an offset to account
 		//for the rest of the metronome initialization:
 
-		// var possibleFirstBeat = new Date(initialDate.getTime());
 		var firstIndex = 0;
 		do {
 		  	//4*delay ensures we'll start on beat one of a measure
@@ -52,13 +51,12 @@ function Metronome(tempo, resolution) {
 		}
 	}
 
-	const NOTE_LENGTH = 0.05; // seconds
 	var beatBuffer = [];
-	var audioContext = new (window.AudioContext || window.webkitAudioContext)();
-	var sequence, silentSequence;
+	var toneSequence;
 	this.play = function() {
 		var delay = getDelayInMs(_this.tempo);
 		var firstBeat = getFirstBeat(delay);
+		// 
 		fillBeatBuffer(firstBeat, delay, function() {
 			var sequenceArray = [];
 			while (beatBuffer.length !== 0) {
@@ -75,33 +73,58 @@ function Metronome(tempo, resolution) {
 			    if (!noPlay) {
 				  	// create a new oscillator to make the noise
 				  	if (nextTime[1] % 16 === 0) {   // beat 0 == high pitch
-				      	freq = 'A5 0.0125';
+				      	freq = 0;
 				  	} else if (nextTime[1] % 4 === 0 ) {   // quarter beats = medium pitch
-				      	freq = 'A4 0.0125';
+				      	freq = 1;
 				  	} else {                       // other 16th beats = low pitch
-				      	freq = 'A3 0.0125';
+				      	freq = 1;
 				  	}
 				} else {
-					freq = '- 0.0125';
+					freq = 2;
 				}
 				sequenceArray.push(freq);
-				sequenceArray.push('- 0.02375');
 			}
-			sequence = new TinyMusic.Sequence(audioContext, _this.tempo, sequenceArray);
+			console.log(sequenceArray);
 			var offset = Number(Session.get('offset'));
+			//setup a polyphonic sampler
+			var highUrl, lowUrl;
+		    if (Meteor.isCordova) {
+		      	highUrl = WebAppLocalServer.localFileSystemUrl('application/app/High_Seiko_SQ50.wav');
+		      	lowUrl = WebAppLocalServer.localFileSystemUrl('application/app/Low_Seiko_SQ50.wav');
+		    } else {
+		      	highUrl = '/High_Seiko_SQ50.wav';
+		      	lowUrl = '/Low_Seiko_SQ50.wav';
+		    }
+			var keys = new Tone.MultiPlayer({
+				urls : {
+					"high" : highUrl,
+					"low" : lowUrl,
+				},
+				volume : -10,
+				fadeOut : 0.1,
+			}).toMaster();
+			//the notes
+			var noteNames = ["high", "low"];
+			toneSequence = new Tone.Sequence(function(time, col){
+				var column = sequenceArray[col];
+				if (column != 2) {
+					//slightly randomized velocities
+					var vel = Math.random() * 0.5 + 0.5;
+					keys.start(noteNames[column], time, 0, "32n", 0, vel);
+				}
+			}, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "16n");
+			Tone.Transport.bpm.value = _this.tempo;
+			Tone.Transport.start();
+			Tone.context.resume();
 			Meteor.setTimeout(function() {
-				sequence.gain.gain.value = 0;
-				sequence.play();
-				sequence.gain.gain.value = 1;
+				toneSequence.start();
 			}, firstBeat[0] + offset - Date.now());
 		});
 	};
 	this.pause = function() {
-		sequence.gain.gain.value = 0;
-		Meteor.setTimeout(function() {
-			sequence.stop();
-			audioContext.close();
-		}, 10);
+		toneSequence.stop();
+		Tone.Transport.stop();
+		Tone.context.suspend();
 	};
 	this.unload = function() {
 		_this.pause();
