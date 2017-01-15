@@ -1,6 +1,7 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 import '../imports/ui/body.js';
+import '../imports/api/metronome/animation.js';
 import timesync from 'timesync';
 // import 'cordova-plugin-media';
 import 'howler';
@@ -161,7 +162,7 @@ function beatCallback() {
   	if (nextTime[1] % 16 === 0) {   // beat 0 == high pitch
       freq = 0;
   		beatType = "beat 0";
-  	} else if (beatBuffer[1][1] % 4 === 0 ) {   // quarter beats = medium pitch
+  	} else if (nextTime[1] % 4 === 0 ) {   // quarter beats = medium pitch
       freq = 1;
   		beatType = "quarter beat";
   	} else {                       // other 16th beats = low pitch
