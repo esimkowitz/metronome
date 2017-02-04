@@ -1,4 +1,5 @@
 import Tone from 'tone';
+import './animation.js';
 
 function Metronome(tempo, resolution) {
 	var _this = this;
@@ -20,7 +21,7 @@ function Metronome(tempo, resolution) {
 
 	// This part is the algorithm we wrote to ensure that the metronomes all play the correct beat at the correct time.
 	function getFirstBeat(delay) {
-		var now = new Date(ts.now());
+		var now = new Date(Date.now() + Session.get('offset'));
 		var possibleFirstBeat = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), 0, 0).getTime();
 
 		//Start counting up from the current date + 50 milliseconds
@@ -56,7 +57,7 @@ function Metronome(tempo, resolution) {
 	this.play = function() {
 		var delay = getDelayInMs(_this.tempo);
 		var firstBeat = getFirstBeat(delay);
-		// 
+
 		fillBeatBuffer(firstBeat, delay, function() {
 			var sequenceArray = [];
 			while (beatBuffer.length !== 0) {
@@ -77,10 +78,10 @@ function Metronome(tempo, resolution) {
 				  	} else if (nextTime[1] % 4 === 0 ) {   // quarter beats = medium pitch
 				      	freq = 1;
 				  	} else {                       // other 16th beats = low pitch
-				      	freq = 1;
+				      	freq = 2;
 				  	}
 				} else {
-					freq = 2;
+					freq = 3;
 				}
 				sequenceArray.push(freq);
 			}
@@ -88,30 +89,40 @@ function Metronome(tempo, resolution) {
 			var offset = Number(Session.get('offset'));
 			//setup a polyphonic sampler
 			var highUrl, lowUrl;
-		    if (Meteor.isCordova) {
-		      	highUrl = WebAppLocalServer.localFileSystemUrl('application/app/High_Seiko_SQ50.wav');
-		      	lowUrl = WebAppLocalServer.localFileSystemUrl('application/app/Low_Seiko_SQ50.wav');
-		    } else {
-		      	highUrl = '/High_Seiko_SQ50.wav';
-		      	lowUrl = '/Low_Seiko_SQ50.wav';
-		    }
+	      	highUrl = '/High_Seiko_SQ50.wav';
+	      	lowUrl = '/Low_Seiko_SQ50.wav';
 			var keys = new Tone.MultiPlayer({
 				urls : {
 					"high" : highUrl,
 					"low" : lowUrl,
 				},
-				volume : -10,
+				volume : 5,
 				fadeOut : 0.1,
 			}).toMaster();
 			//the notes
-			var noteNames = ["high", "low"];
+			var noteNames = ["high", "low", "low"];
 			toneSequence = new Tone.Sequence(function(time, col){
 				var column = sequenceArray[col];
-				if (column != 2) {
-					//slightly randomized velocities
-					var vel = Math.random() * 0.5 + 0.5;
-					keys.start(noteNames[column], time, 0, "32n", 0, vel);
-				}
+				Tone.Draw.schedule(function(){
+			        //this callback is invoked from a requestAnimationFrame
+			        //and will be invoked close to AudioContext time
+			        // For scheduling the animations to occur on the quarter beats.
+					// These are scheduled one interval early because it needs to be
+					// scheduled half an animation interval before the beat and the
+					// animation interval is four times as long as the sound interval.
+
+					var nextCol = col + 1;
+					if (nextCol > 15) nextCol -= 16;
+					if (sequenceArray[nextCol] === 0) { 
+					  	strike(delay*2, true);
+					} else if (sequenceArray[nextCol] === 1) {   
+					  	strike(delay*2);
+					}
+					if (column != 3) {
+						console.log(noteNames[column] + " tick at " + Math.round(new Date(Date.now() + Session.get('offset'))%60000/10)/100 + "s");
+					}
+			    }, time) //use AudioContext time of the event
+				keys.start(noteNames[column], time, 0, "32n", 0, 0.75);
 			}, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "16n");
 			Tone.Transport.bpm.value = _this.tempo;
 			Tone.Transport.start();

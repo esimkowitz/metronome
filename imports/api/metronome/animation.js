@@ -103,7 +103,7 @@ function resumeAnimation(callback) {
 }
 
 function logAnim() {
-	console.log("Animation at " + (ts.now()%60000)/1000 + "s");
+	console.log("Animation at " + (new Date(Date.now() + Session.get('offset'))%60000)/1000 + "s");
 }
 
 function tick(event) {

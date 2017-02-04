@@ -3,6 +3,7 @@ import './syncStatus.js';
 import './animation.js';
 import './body.html';
 import { Metronome } from '../api/metronome/metronome.js';
+import '../api/metronome/animation.js';
 
 resolution = 4;
 Template.body.onCreated(function bodyOnCreated() {
@@ -11,6 +12,15 @@ Template.body.onCreated(function bodyOnCreated() {
   this.resolution = new ReactiveVar(4);
   this.isPlay = new ReactiveVar(false);
   this.metronome = null;
+  Tracker.autorun(function() {
+    if (Session.equals('visible', false)) {
+      if (self.metronome !== null) {
+        self.metronome.pause();
+        self.isPlay.set(false);
+        pauseAnimation();
+      }
+    }
+  });
 });
 
 Template.body.helpers({
@@ -40,8 +50,10 @@ Template.body.events({
     if (newIsPlay) {
       Template.instance().metronome = new Metronome(Template.instance().tempo.get(), Template.instance().resolution.get());
       Template.instance().metronome.play();
+      startAnimation();
     } else {
       Template.instance().metronome.pause();
+      pauseAnimation();
     }
   },
   'input .tempoBox input'(event, instance) {
